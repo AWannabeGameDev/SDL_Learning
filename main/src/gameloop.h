@@ -1,14 +1,17 @@
 #ifndef GAMELOOP_H
 #define GAMELOOP_H
 
+#include <random>
 #include <sdl/SDL.h>
 #include <sdl_util/sdloo.h>
-#include "tilemap/tilemap_include.h"
+#include <tilemap/tilemap_include.h>
 #include <sdl_util/timer.h>
 #include "helper/constants.h"
-#include "entities/player.h"
+//#include "entities/player.h"
 #include <sdl_util/keyboard_input.h>
-#include "helper/my_collision_listener.h"
+//#include "helper/my_collision_listener.h"
+#include "helper/my_kine_engine.h"
+#include "helper/body_data.h"
 
 //FIX THE TILE RENDER GLITCH LINES
 
@@ -31,36 +34,82 @@ public:
 		SDL_Init(SDL_INIT_VIDEO);
 		IMG_Init(IMG_INIT_PNG);
 
-		KeyboardInput::addKeybind("KEY_UP", SDL_SCANCODE_W);
-		KeyboardInput::addKeybind("KEY_DOWN", SDL_SCANCODE_S);
-		KeyboardInput::addKeybind("KEY_LEFT", SDL_SCANCODE_A);
-		KeyboardInput::addKeybind("KEY_RIGHT", SDL_SCANCODE_D);
-		KeyboardInput::addKeybind("KEY_JUMP", SDL_SCANCODE_SPACE);
+		KeyboardInput::addKeybind("SIM_PAUSE_RESUME", SDL_SCANCODE_SPACE);
+		KeyboardInput::addKeybind("SIM_STEP", SDL_SCANCODE_RIGHT);
 
 		running = true;
 
 	}
 
-	static void loadLevelBodies(TileMap& map, cle::CollisionListener& collisionListener) {
+	static void randomMotionTest(MyKineEngine& engine) {
 
-		ObjectLayer& layer = map.getObjectLayer("statics");
+		float borderThickness = 20;
 
-		for(size_t i = 0; i < layer.size(); i++) {
+		kine::Body* borderBox = engine.createBody(false);
+		borderBox->aabb = {0, 0, 1280, borderThickness};
+		((BodyData*)borderBox->userData)->isStatic = true;
 
-			RectangleMapObject& rectObj = layer.getObject(i).get<RectangleMapObject>();
+		borderBox = engine.createBody(false);
+		borderBox->aabb = {0, 720 - borderThickness, 1280, borderThickness};
+		((BodyData*)borderBox->userData)->isStatic = true;
 
-			cle::Collider* coll = collisionListener.addCollider(false);
-			coll->aabb = {rectObj.x, rectObj.y, rectObj.width, rectObj.height};
+		borderBox = engine.createBody(false);
+		borderBox->aabb = {0, 0, borderThickness, 720};
+		((BodyData*)borderBox->userData)->isStatic = true;
+
+		borderBox = engine.createBody(false);
+		borderBox->aabb = {1280 - borderThickness, 0, borderThickness, 720};
+		((BodyData*)borderBox->userData)->isStatic = true;
+
+		srand(time(nullptr));
+
+		float boxW = 20;
+		float boxH = 20;
+
+		for(int i = 1; i <= 20; i++) {
+
+			kine::Body* box = engine.createBody(true);
+			((BodyData*)box->userData)->isStatic = false;
+			box->aabb = {(float)(rand() % (int)(1280 - (2 * borderThickness) - boxW)) + borderThickness,
+						 (float)(rand() % (int)(720 - (2 * borderThickness) - boxH)) + borderThickness,
+						 boxW, boxH};
+			box->speed = {3 * ((float)((rand() % 400) - 200)), 3 * ((float)((rand() % 400) - 200))};
 
 		}
 
 	}
 
-	static SDL_FRect loadLevelBorder(TileMap& map) {
+	static void stackTest(MyKineEngine& engine) {
 
-		ObjectLayer& layer = map.getObjectLayer("meta_info");
-		RectangleMapObject& rectObj = layer.getObject("border").get<RectangleMapObject>();
-		return {rectObj.x, rectObj.y, rectObj.width, rectObj.height};
+		float borderThickness = 20;
+
+		kine::Body* borderBox = engine.createBody(false);
+		borderBox->aabb = {0, 0, 1280, borderThickness};
+		((BodyData*)borderBox->userData)->isStatic = true;
+
+		borderBox = engine.createBody(false);
+		borderBox->aabb = {0, 720 - borderThickness, 1280, borderThickness};
+		((BodyData*)borderBox->userData)->isStatic = true;
+
+		borderBox = engine.createBody(false);
+		borderBox->aabb = {0, 0, borderThickness, 720};
+		((BodyData*)borderBox->userData)->isStatic = true;
+
+		borderBox = engine.createBody(false);
+		borderBox->aabb = {1280 - borderThickness, 0, borderThickness, 720};
+		((BodyData*)borderBox->userData)->isStatic = true;
+
+		float boxW = 20;
+		float boxH = 20;
+
+		for(float x = borderThickness; x <= (1280 - borderThickness - boxW); x += (2 * boxW)) {
+
+			kine::Body* box = engine.createBody(true);
+			box->aabb = {x, 600, boxW, boxH};
+			box->speed = {60, 0};
+			((BodyData*)box->userData)->isStatic = false;
+
+		}
 
 	}
 
@@ -69,18 +118,17 @@ public:
 		SDLOO::Window window {"First", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
 			1280, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE};
 		SDLOO::Renderer renderer {window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC, 
-								  16 * 20, 16 * 11.25f};
-		renderer.setCameraPosition(-32.f, -32.f);
+								  1600, 900};
+		renderer.setCameraPosition(-(1600-1280)/2, -(900-720)/2);
 
 		Timer timer;
-		MyCollisionListener collisionListener;
+		MyKineEngine kineEngine;
 
-		TileMap level {"graybox/level0.tmx", renderer};
-		SDL_FRect levelBorder = loadLevelBorder(level);
-		loadLevelBodies(level, collisionListener);
+		bool mouseDragging = false;
 
-		PointMapObject& spawn = level.getObjectLayer("meta_info").getObject("spawn").get<PointMapObject>();
-		Player player {spawn.x, spawn.y, collisionListener, renderer};
+		bool paused = true;
+
+		stackTest(kineEngine);
 
 		while(running) {
 
@@ -89,13 +137,38 @@ public:
 			SDL_Event ev;
 			while(SDL_PollEvent(&ev)) {
 
-				if(ev.type == SDL_WINDOWEVENT) {
+				switch(ev.type) {
 
-					if(ev.window.event == SDL_WINDOWEVENT_RESIZED) renderer.updateView();
+					case SDL_WINDOWEVENT :
 
-				} else if(ev.type == SDL_QUIT) {
+						if(ev.window.event == SDL_WINDOWEVENT_RESIZED) renderer.updateView();
+						break;
 
-					setRunning(false);
+					case SDL_QUIT :
+
+						setRunning(false);
+						break;
+
+					case SDL_MOUSEWHEEL :
+
+						renderer.scaleCameraBy(expf(-(float)ev.wheel.y / 10));
+						break;
+
+					case SDL_MOUSEBUTTONDOWN :
+
+						mouseDragging = true;
+						break;
+
+					case SDL_MOUSEBUTTONUP :
+
+						mouseDragging = false;
+						break;
+
+					case SDL_MOUSEMOTION :
+
+						if(mouseDragging)
+							renderer.moveCamera(-(float)ev.motion.xrel, -(float)ev.motion.yrel);
+						break;
 
 				}
 
@@ -103,29 +176,25 @@ public:
 
 			KeyboardInput::updateState();
 
-			player.update(deltaTime);
-			collisionListener.checkCollisions();
-			player.centerCamera(renderer, levelBorder);
+			if(KeyboardInput::isJustPressed("SIM_PAUSE_RESUME"))
+				paused = !paused;
+
+			if(paused) {
+
+				if(KeyboardInput::isJustPressed("SIM_STEP"))
+					kineEngine.step(deltaTime);
+
+			} else kineEngine.step(deltaTime);
 
 			// RENDER -----------------
 
 			timer.reset();
 			renderer.clear();
 
-			level.render(renderer, 0, 0);
-			player.render(renderer);
-
 			renderer.setDrawColor(255, 0, 0, 255);
-			for(auto it = collisionListener.resolvedBegin(); it != collisionListener.resolvedEnd(); ++it) {
+			for(auto& body : kineEngine) {
 
-				SDL_FRect rect {it->aabb.x, it->aabb.y, it->aabb.w, it->aabb.h};
-				renderer.drawRect(rect);
-
-			}
-
-			for(auto it = collisionListener.unresolvedBegin(); it != collisionListener.unresolvedEnd(); ++it) {
-
-				SDL_FRect rect{it->aabb.x, it->aabb.y, it->aabb.w, it->aabb.h};
+				SDL_FRect rect {body.aabb.x, body.aabb.y, body.aabb.w, body.aabb.h};
 				renderer.drawRect(rect);
 
 			}

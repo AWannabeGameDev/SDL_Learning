@@ -32,14 +32,16 @@ void CollisionListener::removeCollider(Collider* toRemove) {
 
 }
 
-Freelist<Collider>::Iterator cle::CollisionListener::resolvedBegin()
-{
+Freelist<Collider>::Iterator cle::CollisionListener::resolvedBegin() {
+
 	return m_resColliders.begin();
+
 }
 
-Freelist<Collider>::Iterator cle::CollisionListener::resolvedEnd()
-{
+Freelist<Collider>::Iterator cle::CollisionListener::resolvedEnd() {
+
 	return m_resColliders.end();
+
 }
 
 Freelist<Collider>::Iterator cle::CollisionListener::unresolvedBegin()
@@ -47,16 +49,17 @@ Freelist<Collider>::Iterator cle::CollisionListener::unresolvedBegin()
 	return m_nonResColliders.begin();
 }
 
-Freelist<Collider>::Iterator cle::CollisionListener::unresolvedEnd()
-{
+Freelist<Collider>::Iterator cle::CollisionListener::unresolvedEnd() {
+
 	return m_nonResColliders.end();
+
 }
 
 void CollisionListener::f_checkCollision(Collider* first, Collider* second) {
 
 	if(m_toBeRemoved.contains(first) || m_toBeRemoved.contains(second)) return;
 
-	CollisionPair collision{first, second};
+	CollisionPair collision {first, second};
 
 	if(!m_overlaps.contains(collision)) {
 
@@ -126,8 +129,6 @@ void CollisionListener::checkCollisions() {
 
 			endTouch(it->first, it->second, 
 					 calculateNormal(it->first->m_prevAABBCollide, it->second->m_prevAABBCollide));
-
-			//std::cout << it->first->m_prevAABBCollide << ", " << it->second->m_prevAABBCollide << '\n';
 
 			it = m_touches.erase(it);
 

@@ -4,12 +4,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "main", "main\main.vcxproj", "{07C1468B-E835-4745-BF1B-818210736DAB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1B049A9C-3719-4446-82B5-07F3C2AA0A98} = {1B049A9C-3719-4446-82B5-07F3C2AA0A98}
+		{233D7295-36BA-447F-B6F5-FB785EDD2759} = {233D7295-36BA-447F-B6F5-FB785EDD2759}
+		{6804717B-81AF-4BBA-8611-46AD871B6285} = {6804717B-81AF-4BBA-8611-46AD871B6285}
+		{C1C5D595-8C56-456D-BE71-993E71505AC5} = {C1C5D595-8C56-456D-BE71-993E71505AC5}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "collision_engine", "collision_engine\collision_engine.vcxproj", "{1B049A9C-3719-4446-82B5-07F3C2AA0A98}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sdl_util", "sdl_util\sdl_util.vcxproj", "{6804717B-81AF-4BBA-8611-46AD871B6285}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tilemap", "tilemap\tilemap.vcxproj", "{C1C5D595-8C56-456D-BE71-993E71505AC5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6804717B-81AF-4BBA-8611-46AD871B6285} = {6804717B-81AF-4BBA-8611-46AD871B6285}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kinematics_engine", "kinematics_engine\kinematics_engine.vcxproj", "{233D7295-36BA-447F-B6F5-FB785EDD2759}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +62,14 @@ Global
 		{C1C5D595-8C56-456D-BE71-993E71505AC5}.Release|x64.Build.0 = Release|x64
 		{C1C5D595-8C56-456D-BE71-993E71505AC5}.Release|x86.ActiveCfg = Release|Win32
 		{C1C5D595-8C56-456D-BE71-993E71505AC5}.Release|x86.Build.0 = Release|Win32
+		{233D7295-36BA-447F-B6F5-FB785EDD2759}.Debug|x64.ActiveCfg = Debug|x64
+		{233D7295-36BA-447F-B6F5-FB785EDD2759}.Debug|x64.Build.0 = Debug|x64
+		{233D7295-36BA-447F-B6F5-FB785EDD2759}.Debug|x86.ActiveCfg = Debug|Win32
+		{233D7295-36BA-447F-B6F5-FB785EDD2759}.Debug|x86.Build.0 = Debug|Win32
+		{233D7295-36BA-447F-B6F5-FB785EDD2759}.Release|x64.ActiveCfg = Release|x64
+		{233D7295-36BA-447F-B6F5-FB785EDD2759}.Release|x64.Build.0 = Release|x64
+		{233D7295-36BA-447F-B6F5-FB785EDD2759}.Release|x86.ActiveCfg = Release|Win32
+		{233D7295-36BA-447F-B6F5-FB785EDD2759}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
