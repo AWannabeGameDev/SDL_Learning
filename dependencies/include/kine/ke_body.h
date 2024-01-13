@@ -18,11 +18,8 @@ namespace kine {
 		void* userData;
 
 		bool isResolved() const;
-		Vector2 velocity() const;
 
 	private :
-
-		Vector2 m_velocity;
 
 		bool m_isResolved;
 		class KineEngine* m_engine;

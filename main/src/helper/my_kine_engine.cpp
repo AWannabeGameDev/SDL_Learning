@@ -29,7 +29,7 @@ void MyKineEngine::endCollide(kine::Body* first, kine::Body* second) {
 void MyKineEngine::onResolve(kine::Body* first, kine::Body* second, 
 							 kine::Vector2 normal, float timeStep, float timeOfImpact) {
 
-#if 1
+#if 0
 
 	BodyData* firstData = (BodyData*)first->userData;
 	BodyData* secondData = (BodyData*)second->userData;
@@ -47,7 +47,7 @@ void MyKineEngine::onResolve(kine::Body* first, kine::Body* second,
 	} else {
 
 		if(normal.x) std::swap(first->speed.x, second->speed.x);
-		std::swap(first->speed.y, second->speed.y);
+		else std::swap(first->speed.y, second->speed.y);
 
 	}
 

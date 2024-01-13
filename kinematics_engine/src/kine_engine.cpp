@@ -82,13 +82,25 @@ void KineEngine::step(float deltaTime) {
 		Body* body = it->first;
 		m_CollisionInfo& info = it->second;
 
-		body->aabb.x -= body->speed.x * (deltaTime - info.timeOfImpact);
-		body->aabb.y -= body->speed.y * (deltaTime - info.timeOfImpact);
+		Vector2 bodyDisp, otherDisp;
+
+		if(info.timeOfImpact > (deltaTime * (1 - m_timeOfImpactSlop))) {
+
+			bodyDisp = (-body->speed * (deltaTime - info.timeOfImpact));
+			otherDisp = (-info.other->speed * (deltaTime - info.timeOfImpact));
+
+		} else {
+
+			bodyDisp = {body->prevPosition.x - body->aabb.x, body->prevPosition.y - body->aabb.y};
+			otherDisp = {info.other->prevPosition.x - info.other->aabb.x, 
+						 info.other->prevPosition.y - info.other->aabb.y};
+
+		}
 
 		if(info.other->isResolved() == true) {
 
-			info.other->aabb.x -= info.other->speed.x * (deltaTime - info.timeOfImpact);
-			info.other->aabb.y -= info.other->speed.y * (deltaTime - info.timeOfImpact);
+			info.other->aabb.x += otherDisp.x;
+			info.other->aabb.y += otherDisp.y;
 
 			if(m_collisions.contains(info.other)) {
 
@@ -97,7 +109,10 @@ void KineEngine::step(float deltaTime) {
 
 			}
 
-		}
+		} else bodyDisp -= otherDisp;
+
+		body->aabb.x += bodyDisp.x;
+		body->aabb.y += bodyDisp.y;
 
 		Vector2 overlap = f_overlappingAxes(body->aabb, info.other->aabb);
 		Vector2 normal {f_sgn(info.other->aabb.x - body->aabb.x) * overlap.y, 
@@ -106,9 +121,6 @@ void KineEngine::step(float deltaTime) {
 		onResolve(body, info.other, normal, deltaTime, info.timeOfImpact);
 
 	}
-
-	for(Body& body : m_bodies) 
-		body.m_velocity = Vector2{body.aabb.x - body.prevPosition.x, body.aabb.y - body.prevPosition.y} * (1 / deltaTime);
 
 	m_collisions.clear();
 
@@ -140,45 +152,13 @@ void kine::KineEngine::f_thickenAABB(AABB2& main, const AABB2& medium) {
 
 float KineEngine::f_findCollisionTime(Body* first, Body* second, float deltaTime) {
 
-	AABB2 aabb;
-	Vector2 point;
-	Vector2 currentPoint;
-	Vector2 pointVelocity;
+	AABB2 aabb = {first->prevPosition.x, first->prevPosition.y, first->aabb.w, first->aabb.h};
+	f_thickenAABB(aabb, second->aabb);
 
-	if(first->isResolved() == false) {
+	Vector2 point = {second->prevPosition.x + (second->aabb.w / 2), second->prevPosition.y + (second->aabb.h / 2)};
+	Vector2 currentPoint = second->aabb.center();
 
-		aabb = first->aabb;
-		f_thickenAABB(aabb, second->aabb);
-
-		point = {second->prevPosition.x + (second->aabb.w / 2), second->prevPosition.y + (second->aabb.h / 2)};
-		currentPoint = second->aabb.center();
-
-		pointVelocity = second->speed - first->speed;
-		if(pointVelocity.magnitudeSquared() == 0) pointVelocity = second->m_velocity - first->m_velocity;
-
-	} else if(second->isResolved() == false) {
-
-		aabb = second->aabb;
-		f_thickenAABB(aabb, first->aabb);
-
-		point = {first->prevPosition.x + (first->aabb.w / 2), first->prevPosition.y + (first->aabb.h / 2)};
-		currentPoint = first->aabb.center();
-
-		pointVelocity = first->speed - second->speed;
-		if(pointVelocity.magnitudeSquared() == 0) pointVelocity = first->m_velocity - second->m_velocity;
-
-	} else {
-		
-		aabb = {first->prevPosition.x, first->prevPosition.y, first->aabb.w, first->aabb.h};
-		f_thickenAABB(aabb, second->aabb);
-
-		point = {second->prevPosition.x + (second->aabb.w / 2), second->prevPosition.y + (second->aabb.h / 2)};
-		currentPoint = second->aabb.center();
-
-		pointVelocity = second->speed - first->speed;
-		if(pointVelocity.magnitudeSquared() == 0) pointVelocity = second->m_velocity - first->m_velocity;
-
-	}
+	Vector2 pointVelocity = second->speed - first->speed;
 
 	Vector2 candidateLines {-f_sgn(pointVelocity.x), -f_sgn(pointVelocity.y)};
 	Vector2 xpoi, ypoi, poi;
@@ -204,9 +184,9 @@ float KineEngine::f_findCollisionTime(Body* first, Body* second, float deltaTime
 	if((xpoi.y > (aabb.y + aabb.h)) || (xpoi.y < aabb.y)) poi = ypoi;
 	else poi = xpoi;
 
-	float origDistSq = (currentPoint - point).magnitudeSquared();
-	float collisionDistSq = (point - poi).magnitudeSquared();
-	float toi = deltaTime * sqrtf(collisionDistSq / origDistSq);
+	float dispSq = (poi - point).magnitudeSquared();
+	float velSq = pointVelocity.magnitudeSquared();
+	float toi = sqrtf(dispSq / velSq);
 
 	return toi * m_timeOfImpactSlop;
 

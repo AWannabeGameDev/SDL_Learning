@@ -12,11 +12,11 @@ bool AABB2::overlaps(const AABB2& other) const {
 
 Vector2 AABB2::center() const {
 
-	return {x - (w / 2), y - (h / 2)};
+	return {x + (w / 2), y + (h / 2)};
 
 }
 
-Vector2 Vector2::operator+(const Vector2& other)  const{
+Vector2 Vector2::operator+(const Vector2& other) const {
 
 	return {x + other.x, y + other.y};
 
@@ -63,5 +63,17 @@ float kine::Vector2::magnitude() const {
 float kine::Vector2::magnitudeSquared() const {
 
 	return (x * x) + (y * y);
+
+}
+
+Vector2 kine::Vector2::reciprocal() const {
+
+	return {1 / x, 1 / y};
+
+}
+
+float kine::Vector2::dot(const Vector2& other) const {
+
+	return ((x * other.x) + (y * other.y));
 
 }

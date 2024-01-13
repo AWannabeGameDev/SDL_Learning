@@ -7,9 +7,3 @@ bool Body::isResolved() const {
 	return m_isResolved;
 
 }
-
-Vector2 kine::Body::velocity() const {
-
-	return m_velocity;
-
-}

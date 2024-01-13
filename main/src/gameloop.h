@@ -41,85 +41,138 @@ public:
 
 	}
 
+	// works quite well with bouncing, some boxes get pushed put when no bouncing
 	static void randomMotionTest(MyKineEngine& engine) {
 
-		float borderThickness = 20;
+		float borderThickness = 2;
+		float borderW = 128;
+		float borderH = 72;
 
 		kine::Body* borderBox = engine.createBody(false);
-		borderBox->aabb = {0, 0, 1280, borderThickness};
+		borderBox->aabb = {0, 0, borderW, borderThickness};
 		((BodyData*)borderBox->userData)->isStatic = true;
 
 		borderBox = engine.createBody(false);
-		borderBox->aabb = {0, 720 - borderThickness, 1280, borderThickness};
+		borderBox->aabb = {0, borderH - borderThickness, borderW, borderThickness};
 		((BodyData*)borderBox->userData)->isStatic = true;
 
 		borderBox = engine.createBody(false);
-		borderBox->aabb = {0, 0, borderThickness, 720};
+		borderBox->aabb = {0, 0, borderThickness, borderH};
 		((BodyData*)borderBox->userData)->isStatic = true;
 
 		borderBox = engine.createBody(false);
-		borderBox->aabb = {1280 - borderThickness, 0, borderThickness, 720};
+		borderBox->aabb = {borderW - borderThickness, 0, borderThickness, borderH};
 		((BodyData*)borderBox->userData)->isStatic = true;
 
 		srand(time(nullptr));
 
-		float boxW = 20;
-		float boxH = 20;
+		float boxW = 1;
+		float boxH = 1;
+		float boxMaxSpeed = 70;
+		float numBoxes = 80;
 
-		for(int i = 1; i <= 20; i++) {
+		for(int i = 1; i <= numBoxes; i++) {
 
 			kine::Body* box = engine.createBody(true);
 			((BodyData*)box->userData)->isStatic = false;
-			box->aabb = {(float)(rand() % (int)(1280 - (2 * borderThickness) - boxW)) + borderThickness,
-						 (float)(rand() % (int)(720 - (2 * borderThickness) - boxH)) + borderThickness,
+			box->aabb = {(float)(rand() % (int)(borderW - (2 * borderThickness) - boxW)) + borderThickness,
+						 (float)(rand() % (int)(borderH - (2 * borderThickness) - boxH)) + borderThickness,
 						 boxW, boxH};
-			box->speed = {3 * ((float)((rand() % 400) - 200)), 3 * ((float)((rand() % 400) - 200))};
+			box->speed = {3 * ((float)((rand() % (int)((2.f/3.f) * boxMaxSpeed)) - (boxMaxSpeed / 3))), 
+						  3 * ((float)((rand() % (int)((2.f/3.f) * boxMaxSpeed)) - (boxMaxSpeed / 3)))};
 
 		}
 
 	}
 
+	// doesnt work at all
 	static void stackTest(MyKineEngine& engine) {
 
-		float borderThickness = 20;
+		float borderThickness = 2;
+		float borderW = 128;
+		float borderH = 72;
 
 		kine::Body* borderBox = engine.createBody(false);
-		borderBox->aabb = {0, 0, 1280, borderThickness};
+		borderBox->aabb = {0, 0, borderW, borderThickness};
 		((BodyData*)borderBox->userData)->isStatic = true;
 
 		borderBox = engine.createBody(false);
-		borderBox->aabb = {0, 720 - borderThickness, 1280, borderThickness};
+		borderBox->aabb = {0, borderH - borderThickness, borderW, borderThickness};
 		((BodyData*)borderBox->userData)->isStatic = true;
 
 		borderBox = engine.createBody(false);
-		borderBox->aabb = {0, 0, borderThickness, 720};
+		borderBox->aabb = {0, 0, borderThickness, borderH};
 		((BodyData*)borderBox->userData)->isStatic = true;
 
 		borderBox = engine.createBody(false);
-		borderBox->aabb = {1280 - borderThickness, 0, borderThickness, 720};
+		borderBox->aabb = {borderW - borderThickness, 0, borderThickness, borderH};
 		((BodyData*)borderBox->userData)->isStatic = true;
 
-		float boxW = 20;
-		float boxH = 20;
+		float boxW = 2;
+		float boxH = 2;
 
-		for(float x = borderThickness; x <= (1280 - borderThickness - boxW); x += (2 * boxW)) {
+		for(float x = borderThickness; x <= (borderW - borderThickness - boxW); x += (2 * boxW)) {
 
 			kine::Body* box = engine.createBody(true);
-			box->aabb = {x, 600, boxW, boxH};
-			box->speed = {60, 0};
+			box->aabb = {x, 60, boxW, boxH};
+			box->speed = {6, 0};
 			((BodyData*)box->userData)->isStatic = false;
 
 		}
+
+	}
+
+	// works perfectly
+	static void headOnCollisionTest(MyKineEngine& engine) {
+
+		float boxW = 4;
+		float boxH = 4;
+		float boxVel = 10;
+		float boxSep = 40;
+
+		kine::Body* box = engine.createBody(false);
+		box->aabb = {-boxSep / 2, 0, boxW, boxH};
+		box->speed = {boxVel / 2, 0};
+
+		box = engine.createBody(true);
+		box->aabb = {boxSep / 2, 0, boxW, boxH};
+		box->speed = {-boxVel, 0};
+
+	}
+
+	// works good with bouncing, slightly unstable without bouncing but overall is pseudo-stable
+	static void multiBodyCollisionTest(MyKineEngine& engine) {
+
+		float boxW = 4;
+		float boxH = 4;
+		float boxVel = 12;
+		
+		kine::Body* box = engine.createBody(false);
+		box->aabb = {-boxW / 2, -20 - boxH, boxW, boxH};
+		box->speed = {0, boxVel};
+
+		box = engine.createBody(true);
+		box->aabb = {16, 12, boxW, boxH};
+		box->speed = {-boxVel * 4.f/5.f, -boxVel * 3.f/5.f};
+
+		box = engine.createBody(true);
+		box->aabb = {-16 - boxW, 12, boxW, boxH};
+		box->speed = {boxVel * 4.f/5.f, -boxVel* 3.f/5.f};
 
 	}
 
 	static void run() {
 
+		int windowW = 1280;
+		int windowH = 720;
+		float cameraW = 160;
+		float cameraH = 90;
+
 		SDLOO::Window window {"First", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
-			1280, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE};
+			windowW, windowH, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE};
 		SDLOO::Renderer renderer {window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC, 
-								  1600, 900};
-		renderer.setCameraPosition(-(1600-1280)/2, -(900-720)/2);
+								  160, 90};
+		renderer.setCameraPosition(0, 0);
 
 		Timer timer;
 		MyKineEngine kineEngine;
@@ -128,7 +181,7 @@ public:
 
 		bool paused = true;
 
-		stackTest(kineEngine);
+		multiBodyCollisionTest(kineEngine);
 
 		while(running) {
 
@@ -139,36 +192,44 @@ public:
 
 				switch(ev.type) {
 
-					case SDL_WINDOWEVENT :
+					case SDL_WINDOWEVENT: {
 
 						if(ev.window.event == SDL_WINDOWEVENT_RESIZED) renderer.updateView();
 						break;
 
-					case SDL_QUIT :
+					} case SDL_QUIT: {
 
 						setRunning(false);
 						break;
 
-					case SDL_MOUSEWHEEL :
+					} case SDL_MOUSEWHEEL: {
+
+						const SDL_FRect& cam = renderer.camera();
+						kine::Vector2 camCenter{cam.x + (cam.w / 2), cam.y + (cam.h / 2)};
 
 						renderer.scaleCameraBy(expf(-(float)ev.wheel.y / 10));
+						renderer.setCameraPosition(camCenter.x - (cam.w / 2), camCenter.y - (cam.h / 2));
+
 						break;
 
-					case SDL_MOUSEBUTTONDOWN :
+					} case SDL_MOUSEBUTTONDOWN: {
 
 						mouseDragging = true;
 						break;
 
-					case SDL_MOUSEBUTTONUP :
+					} case SDL_MOUSEBUTTONUP: {
 
 						mouseDragging = false;
 						break;
 
-					case SDL_MOUSEMOTION :
+					} case SDL_MOUSEMOTION: {
 
 						if(mouseDragging)
-							renderer.moveCamera(-(float)ev.motion.xrel, -(float)ev.motion.yrel);
+							renderer.moveCamera(-(float)ev.motion.xrel * (cameraW / windowW),
+												-(float)ev.motion.yrel * (cameraH / windowH));
 						break;
+
+					}
 
 				}
 

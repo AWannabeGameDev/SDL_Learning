@@ -17,6 +17,8 @@ namespace kine {
 
 		float magnitude() const;
 		float magnitudeSquared() const;
+		Vector2 reciprocal() const;
+		float dot(const Vector2& other) const;
 
 	};
 
